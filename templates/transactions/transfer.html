@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block title %}Transfer Points - LoyaltyApp{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--primary-color);">
+        💸 Transfer Points
+    </h1>
+    <p style="color: var(--dark-color);">
+        Send points to friends, family, or other LoyaltyApp users
+    </p>
+</div>
+
+<!-- Current Balance Display -->
+<div class="points-display" style="margin-bottom: 2rem;">
+    💰 Your Current Balance: <span id="current-balance">{{ current_user.points_balance }}</span> Points
+</div>
+
+<div style="max-width: 600px; margin: 0 auto;">
+    <article>
+        <form method="POST">
+            <div class="form-group">
+                <label for="recipient_email">
+                    👤 Recipient Email
+                </label>
+                <input 
+                    type="email" 
+                    id="recipient_email" 
+                    name="recipient_email" 
+                    required 
+                    placeholder="Enter the recipient's email address"
+                    autocomplete="email"
+                >
+                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                    Make sure the recipient has a LoyaltyApp account
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="points">
+                    💰 Points to Transfer
+                </label>
+                <input 
+                    type="number" 
+                    id="points" 
+                    name="points" 
+                    min="1" 
+                    max="{{ current_user.points_balance }}" 
+                    required 
+                    placeholder="Enter points amount"
+                >
+                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                    Available balance: {{ current_user.points_balance }} points
+                </small>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">
+                    📝 Message (Optional)
+                </label>
+                <textarea 
+                    id="description" 
+                    name="description" 
+                    rows="3" 
+                    placeholder="Add a personal message (e.g., 'Thanks for dinner!', 'Happy birthday!')"
+                ></textarea>
+            </div>
+            
+            <!-- Transfer Preview -->
+            <div id="transfer-preview" style="display: none; background: var(--light-color); padding: 1rem; border-radius: 0.5rem; margin: 1rem 0;">
+                <h4 style="color: var(--dark-color); margin-bottom: 0.5rem;">Transfer Preview</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div>
+                        <strong>From:</strong> {{ current_user.username }}<br>
+                        <strong>To:</strong> <span id="preview-recipient">-</span><br>
+                        <strong>Points:</strong> <span id="preview-points">0</span>
+                    </div>
+                    <div>
+                        <strong>Your balance after:</strong><br>
+                        <span id="preview-remaining" style="color: var(--primary-color); font-weight: bold;">{{ current_user.points_balance }}</span> points
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" id="preview-btn" class="secondary">
+                    👁️ Preview Transfer
+                </button>
+                <button type="submit" class="primary" id="submit-btn" disabled>
+                    🚀 Send Points
+                </button>
+            </div>
+        </form>
+    </article>
+</div>
+
+<!-- Recent Transfers -->
+<section style="margin: 3rem 0; max-width: 800px; margin-left: auto; margin-right: auto;">
+    <h2 style="color: var(--secondary-color); margin-bottom: 1rem;">
+        📊 Recent Transfers
+    </h2>
+    <div class="transaction-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Recipient</th>
+                    <th>Points</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="recent-transfers">
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+                        <div class="spinner"></div>
+                        Loading recent transfers...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Quick Transfer Contacts -->
+<section style="margin: 3rem 0; max-width: 600px; margin-left: auto; margin-right: auto;">
+    <h3 style="color: var(--accent-color); margin-bottom: 1rem;">
+        ⚡ Quick Transfer
+    </h3>
+    <p style="color: #666; margin-bottom: 1rem;">
+        Send points to your frequent contacts with one click
+    </p>
+    
+    <div id="quick-contacts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <!-- Quick contacts will be loaded here -->
+        <div style="text-align: center; padding: 2rem; color: #666; border: 2px dashed #ddd; border-radius: 0.5rem;">
+            <p>No recent contacts yet</p>
+            <small>Complete a transfer to see quick contact options</small>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const currentBalance = {{ current_user.points_balance }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadRecentTransfers();
+    setupTransferPreview();
+});
+
+function setupTransferPreview() {
+    const recipientInput = document.getElementById('recipient_email');
+    const pointsInput = document.getElementById('points');
+    const previewBtn = document.getElementById('preview-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const previewDiv = document.getElementById('transfer-preview');
+    
+    // Real-time validation
+    function validateForm() {
+        const recipient = recipientInput.value;
+        const points = parseInt(pointsInput.value);
+        
+        if (recipient && points > 0 && points <= currentBalance) {
+            previewBtn.disabled = false;
+            return true;
+        } else {
+            previewBtn.disabled = true;
+            submitBtn.disabled = true;
+            previewDiv.style.display = 'none';
+            return false;
+        }
+    }
+    
+    recipientInput.addEventListener('input', validateForm);
+    pointsInput.addEventListener('input', function() {
+        validateForm();
+        
+        // Update remaining balance preview
+        const points = parseInt(this.value) || 0;
+        const remaining = currentBalance - points;
+        document.getElementById('preview-remaining').textContent = Math.max(0, remaining);
+        
+        if (points > currentBalance) {
+            this.value = currentBalance;
+            showAlert('Cannot transfer more than your current balance', 'error');
+        }
+    });
+    
+    // Preview functionality
+    previewBtn.addEventListener('click', function() {
+        const recipient = recipientInput.value;
+        const points = parseInt(pointsInput.value);
+        
+        if (validateForm()) {
+            document.getElementById('preview-recipient').textContent = recipient;
+            document.getElementById('preview-points').textContent = points;
+            document.getElementById('preview-remaining').textContent = currentBalance - points;
+            
+            previewDiv.style.display = 'block';
+            submitBtn.disabled = false;
+            
+            showAlert('Transfer preview ready. Review and click "Send Points" to complete.', 'info');
+        }
+    });
+}
+
+function loadRecentTransfers() {
+    fetch('/dashboard/transactions?type=transfer&sort=date_desc', {
+        headers: {
+            'HX-Request': 'true'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const tbody = document.getElementById('recent-transfers');
+        if (html.trim()) {
+            tbody.innerHTML = html;
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No transfers yet</td></tr>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading transfers:', error);
+        document.getElementById('recent-transfers').innerHTML = 
+            '<tr><td colspan="5" style="text-align: center; color: red;">Error loading transfers</td></tr>';
+    });
+}
+
+// Form submission with confirmation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const recipient = document.getElementById('recipient_email').value;
+    const points = document.getElementById('points').value;
+    
+    if (!confirm(`Are you sure you want to send ${points} points to ${recipient}?`)) {
+        e.preventDefault();
+        return false;
+    }
+    
+    // Disable submit button to prevent double submission
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').textContent = 'Sending...';
+});
+
+// Quick transfer functionality (placeholder)
+function quickTransfer(email, points) {
+    document.getElementById('recipient_email').value = email;
+    document.getElementById('points').value = points;
+    document.getElementById('preview-btn').click();
+}
+</script>
+{% endblock %}

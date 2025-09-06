@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Register - LoyaltyApp{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 2rem auto;">
+    <article>
+        <header style="text-align: center; margin-bottom: 2rem;">
+            <h1 style="color: var(--primary-color);">🎉 Join LoyaltyApp</h1>
+            <p>Create your account and start earning points today!</p>
+        </header>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label for="username">
+                    👤 Username
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    required 
+                    placeholder="Choose a unique username"
+                    autocomplete="username"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="email">
+                    📧 Email Address
+                </label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    required 
+                    placeholder="Enter your email address"
+                    autocomplete="email"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">
+                    🔒 Password
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    placeholder="Create a strong password"
+                    autocomplete="new-password"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="user_type">
+                    🎭 Account Type
+                </label>
+                <select id="user_type" name="user_type" required>
+                    <option value="">Select your account type</option>
+                    <option value="customer">🍽️ Customer - I want to earn points</option>
+                    <option value="merchant">🏪 Merchant - I own a restaurant</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="business-name-group" style="display: none;">
+                <label for="business_name">
+                    🏪 Business Name
+                </label>
+                <input 
+                    type="text" 
+                    id="business_name" 
+                    name="business_name" 
+                    placeholder="Enter your restaurant/business name"
+                >
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="primary" style="width: 100%;">
+                    Create Account
+                </button>
+            </div>
+        </form>
+        
+        <footer style="text-align: center; margin-top: 2rem;">
+            <p>
+                Already have an account? 
+                <a href="{{ url_for('auth.login') }}" style="color: var(--primary-color); font-weight: bold;">
+                    Sign in here
+                </a>
+            </p>
+        </footer>
+    </article>
+</div>
+
+<script>
+document.getElementById('user_type').addEventListener('change', function() {
+    const businessNameGroup = document.getElementById('business-name-group');
+    const businessNameInput = document.getElementById('business_name');
+    
+    if (this.value === 'merchant') {
+        businessNameGroup.style.display = 'block';
+        businessNameInput.required = true;
+    } else {
+        businessNameGroup.style.display = 'none';
+        businessNameInput.required = false;
+        businessNameInput.value = '';
+    }
+});
+</script>
+{% endblock %}

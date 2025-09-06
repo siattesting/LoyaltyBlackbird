@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pattern-bg" style="padding: 2rem 0; margin: -2rem -1rem 2rem; border-radius: 0.5rem;">
+    <div class="container">
+        <section style="text-align: center;">
+            <h1 style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary-color);">
+                🍽️ Welcome to LoyaltyApp
+            </h1>
+            <p style="font-size: 1.3rem; margin-bottom: 2rem; color: var(--dark-color);">
+                The loyalty program that rewards you for loving great African restaurants
+            </p>
+            
+            {% if not current_user.is_authenticated %}
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('auth.register') }}" role="button" class="primary" style="font-size: 1.1rem;">
+                        Get Started
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" role="button" class="secondary" style="font-size: 1.1rem;">
+                        Sign In
+                    </a>
+                </div>
+            {% else %}
+                <a href="{{ url_for('dashboard.index') }}" role="button" class="primary" style="font-size: 1.1rem;">
+                    Go to Dashboard
+                </a>
+            {% endif %}
+        </section>
+    </div>
+</div>
+
+<section style="margin: 3rem 0;">
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-value">🎁</span>
+            <span class="stat-label">Earn Points</span>
+            <p>Get rewarded for every meal at participating restaurants</p>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">📱</span>
+            <span class="stat-label">QR Codes</span>
+            <p>Scan to earn points instantly or generate vouchers</p>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">💸</span>
+            <span class="stat-label">Transfer</span>
+            <p>Send points to friends and family members</p>
+        </div>
+        <div class="stat-card">
+            <span class="stat-value">🏆</span>
+            <span class="stat-label">Redeem</span>
+            <p>Use your points for discounts and special offers</p>
+        </div>
+    </div>
+</section>
+
+<section style="margin: 3rem 0;">
+    <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 2rem;">
+        How LoyaltyApp Works
+    </h2>
+    
+    <div class="stats-grid">
+        <article class="stat-card">
+            <h3 style="color: var(--secondary-color);">For Customers</h3>
+            <ul style="text-align: left;">
+                <li>📲 Sign up and start earning points</li>
+                <li>🍽️ Visit participating restaurants</li>
+                <li>📱 Scan QR codes or enter voucher codes</li>
+                <li>💰 Transfer points to friends</li>
+                <li>🎉 Redeem for rewards and discounts</li>
+            </ul>
+        </article>
+        
+        <article class="stat-card">
+            <h3 style="color: var(--accent-color);">For Merchants</h3>
+            <ul style="text-align: left;">
+                <li>🏪 Register your restaurant</li>
+                <li>🎫 Generate voucher codes</li>
+                <li>📱 Create QR codes for instant rewards</li>
+                <li>🎁 Airdrop points to loyal customers</li>
+                <li>📊 Track customer engagement</li>
+            </ul>
+        </article>
+    </div>
+</section>
+
+<section style="margin: 3rem 0; text-align: center; padding: 2rem; background: var(--light-color); border-radius: 0.5rem;">
+    <h2 style="color: var(--primary-color); margin-bottom: 1rem;">
+        🌍 Built for African Markets
+    </h2>
+    <p style="font-size: 1.1rem; color: var(--dark-color);">
+        LoyaltyApp understands the unique needs of African restaurants and their customers. 
+        Our platform works offline, handles multiple currencies, and supports local payment methods.
+    </p>
+    
+    <div style="margin-top: 2rem; display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+        <div>
+            <strong style="color: var(--secondary-color);">📶 Offline-First</strong>
+            <p>Works without internet connection</p>
+        </div>
+        <div>
+            <strong style="color: var(--accent-color);">💱 Multi-Currency</strong>
+            <p>Support for local currencies</p>
+        </div>
+        <div>
+            <strong style="color: var(--primary-color);">🔒 Secure</strong>
+            <p>Bank-level security standards</p>
+        </div>
+    </div>
+</section>
+
+{% if current_user.is_authenticated %}
+<section style="margin: 3rem 0;">
+    <div class="points-display">
+        💰 Your Current Balance: <span id="current-balance">{{ current_user.points_balance }}</span> Points
+    </div>
+    
+    <div style="text-align: center; margin-top: 2rem;">
+        {% if current_user.user_type.value == 'customer' %}
+            <button id="qr-scan-button" role="button" class="primary" style="margin-right: 1rem;">
+                📱 Scan QR Code
+            </button>
+            <a href="{{ url_for('transactions.redeem_voucher') }}" role="button" class="secondary">
+                🎫 Redeem Voucher
+            </a>
+        {% else %}
+            <a href="{{ url_for('transactions.issue_points') }}" role="button" class="primary">
+                🎁 Issue Points
+            </a>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Update balance in real-time
+function updateBalance() {
+    fetch('/dashboard/stats')
+        .then(response => response.json())
+        .then(data => {
+            const balanceElement = document.getElementById('current-balance');
+            if (balanceElement) {
+                balanceElement.textContent = data.points_balance;
+            }
+        })
+        .catch(error => console.error('Error updating balance:', error));
+}
+
+// Update balance every 30 seconds if user is logged in
+{% if current_user.is_authenticated %}
+setInterval(updateBalance, 30000);
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,156 @@
+{% if transactions %}
+    {% for transaction in transactions %}
+    <tr>
+        <td>
+            <time datetime="{{ transaction.created_at.isoformat() }}">
+                {{ transaction.created_at.strftime('%Y-%m-%d') }}<br>
+                <small style="color: #666;">{{ transaction.created_at.strftime('%H:%M') }}</small>
+            </time>
+        </td>
+        <td>
+            <span class="transaction-type {{ transaction.transaction_type.value }}">
+                {% if transaction.transaction_type.value == 'voucher_issue' %}
+                    🎫 Voucher
+                {% elif transaction.transaction_type.value == 'qr_issue' %}
+                    📱 QR Code
+                {% elif transaction.transaction_type.value == 'airdrop' %}
+                    🎁 Airdrop
+                {% elif transaction.transaction_type.value == 'transfer' %}
+                    💸 Transfer
+                {% elif transaction.transaction_type.value == 'redemption' %}
+                    ✨ Redemption
+                {% else %}
+                    📋 {{ transaction.transaction_type.value.title() }}
+                {% endif %}
+            </span>
+        </td>
+        <td>
+            {% if current_user.user_type.value == 'merchant' %}
+                <!-- Merchant view: show customer/recipient -->
+                {% if transaction.receiver %}
+                    <strong>To:</strong> {{ transaction.receiver.username }}<br>
+                    <small style="color: #666;">{{ transaction.receiver.email }}</small>
+                {% elif transaction.sender_id == current_user.id %}
+                    <span style="color: #666;">System Issue</span>
+                {% else %}
+                    <span style="color: #666;">Unknown</span>
+                {% endif %}
+            {% else %}
+                <!-- Customer view: show sender or receiver depending on direction -->
+                {% if transaction.sender_id == current_user.id %}
+                    <!-- User sent points -->
+                    {% if transaction.receiver %}
+                        <strong>To:</strong> {{ transaction.receiver.username }}<br>
+                        <small style="color: #666;">{{ transaction.receiver.email }}</small>
+                    {% else %}
+                        <span style="color: #666;">System</span>
+                    {% endif %}
+                {% else %}
+                    <!-- User received points -->
+                    {% if transaction.sender %}
+                        <strong>From:</strong> {{ transaction.sender.username }}<br>
+                        <small style="color: #666;">
+                            {% if transaction.sender.business_name %}
+                                {{ transaction.sender.business_name }}
+                            {% else %}
+                                {{ transaction.sender.email }}
+                            {% endif %}
+                        </small>
+                    {% else %}
+                        <span style="color: #666;">System</span>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </td>
+        <td>
+            {% if transaction.sender_id == current_user.id %}
+                <!-- Points sent/issued -->
+                <span style="color: var(--primary-color); font-weight: bold;">
+                    -{{ transaction.points }}
+                </span>
+            {% else %}
+                <!-- Points received -->
+                <span style="color: var(--accent-color); font-weight: bold;">
+                    +{{ transaction.points }}
+                </span>
+            {% endif %}
+            <small style="display: block; color: #666;">points</small>
+        </td>
+        <td>
+            {% if transaction.description %}
+                {{ transaction.description }}
+            {% else %}
+                <span style="color: #999; font-style: italic;">No description</span>
+            {% endif %}
+            
+            {% if transaction.voucher_code %}
+                <br><small style="color: #666;">
+                    Code: <code style="background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 0.2rem;">{{ transaction.voucher_code }}</code>
+                </small>
+            {% endif %}
+        </td>
+        <td>
+            {% if current_user.user_type.value == 'merchant' %}
+                <!-- Merchant actions -->
+                {% if transaction.transaction_type.value == 'voucher_issue' and transaction.voucher_code %}
+                    <button 
+                        onclick="copyToClipboard('{{ transaction.voucher_code }}')" 
+                        class="copy-button" 
+                        title="Copy voucher code"
+                    >
+                        📋 Copy
+                    </button>
+                {% elif transaction.transaction_type.value == 'qr_issue' and transaction.qr_code %}
+                    <button 
+                        onclick="showQRCode('{{ transaction.qr_code }}')" 
+                        class="copy-button"
+                        title="Show QR code"
+                    >
+                        📱 QR
+                    </button>
+                {% else %}
+                    <span style="color: #999;">-</span>
+                {% endif %}
+            {% else %}
+                <!-- Customer status/actions -->
+                {% if transaction.transaction_type.value == 'redemption' %}
+                    <span class="user-badge customer" style="font-size: 0.7rem;">
+                        ✅ Redeemed
+                    </span>
+                {% elif transaction.transaction_type.value == 'transfer' %}
+                    {% if transaction.sender_id == current_user.id %}
+                        <span style="color: var(--primary-color); font-size: 0.8rem;">
+                            📤 Sent
+                        </span>
+                    {% else %}
+                        <span style="color: var(--accent-color); font-size: 0.8rem;">
+                            📥 Received
+                        </span>
+                    {% endif %}
+                {% elif transaction.transaction_type.value in ['airdrop', 'voucher_issue', 'qr_issue'] %}
+                    <span style="color: var(--accent-color); font-size: 0.8rem;">
+                        🎁 Earned
+                    </span>
+                {% else %}
+                    <span style="color: #999;">-</span>
+                {% endif %}
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+{% else %}
+    <tr>
+        <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+            <div style="margin-bottom: 1rem;">
+                🔍 No transactions found
+            </div>
+            <small>
+                {% if current_user.user_type.value == 'merchant' %}
+                    Start issuing points to see transaction history here.
+                {% else %}
+                    Visit participating restaurants or redeem vouchers to see your transaction history.
+                {% endif %}
+            </small>
+        </td>
+    </tr>
+{% endif %}

@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Merchant Dashboard - LoyaltyApp{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--primary-color);">
+        🏪 Merchant Dashboard
+    </h1>
+    <p style="color: var(--dark-color);">
+        Welcome back, {{ user.username }}! 
+        {% if user.business_name %}({{ user.business_name }}){% endif %}
+    </p>
+</div>
+
+<!-- Stats Overview -->
+<section class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-value" id="total-issued">0</span>
+        <span class="stat-label">Points Issued</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value" id="active-vouchers">0</span>
+        <span class="stat-label">Active Vouchers</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value" id="customers-served">0</span>
+        <span class="stat-label">Customers Served</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value" id="recent-transactions">0</span>
+        <span class="stat-label">Recent Transactions</span>
+    </div>
+</section>
+
+<!-- Quick Actions -->
+<section style="margin: 2rem 0;">
+    <h2 style="color: var(--secondary-color); margin-bottom: 1rem;">
+        ⚡ Quick Actions
+    </h2>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <a href="{{ url_for('transactions.issue_points') }}" role="button" class="primary">
+            🎁 Issue Points
+        </a>
+        <button id="qr-scan-button" role="button" class="secondary">
+            📱 Scan Customer QR
+        </button>
+        <button onclick="refreshDashboard()" role="button" class="outline">
+            🔄 Refresh Data
+        </button>
+    </div>
+</section>
+
+<!-- Transaction Filters -->
+<section class="filters">
+    <h3 style="color: var(--dark-color); margin-bottom: 1rem;">
+        🔍 Filter Transactions
+    </h3>
+    <form id="transaction-filters">
+        <div class="filter-grid">
+            <div>
+                <label for="type">Transaction Type</label>
+                <select id="type" name="type">
+                    <option value="">All Types</option>
+                    <option value="voucher_issue">Voucher Issue</option>
+                    <option value="qr_issue">QR Issue</option>
+                    <option value="airdrop">Airdrop</option>
+                </select>
+            </div>
+            <div>
+                <label for="date_range">Date Range</label>
+                <select id="date_range" name="date_range">
+                    <option value="">All Time</option>
+                    <option value="7days">Last 7 Days</option>
+                    <option value="30days">Last 30 Days</option>
+                    <option value="90days">Last 90 Days</option>
+                </select>
+            </div>
+            <div>
+                <label for="sort">Sort By</label>
+                <select id="sort" name="sort">
+                    <option value="date_desc">Date (Newest)</option>
+                    <option value="date_asc">Date (Oldest)</option>
+                    <option value="points_desc">Points (High to Low)</option>
+                    <option value="points_asc">Points (Low to High)</option>
+                </select>
+            </div>
+        </div>
+    </form>
+</section>
+
+<!-- Transaction History -->
+<section>
+    <h2 style="color: var(--dark-color); margin-bottom: 1rem;">
+        📊 Transaction History
+    </h2>
+    <div class="transaction-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Customer</th>
+                    <th>Points</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="transaction-list">
+                <!-- Transactions will be loaded here -->
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                        <div class="spinner"></div>
+                        Loading transactions...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Load transactions on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadTransactions();
+    loadMerchantStats();
+});
+
+function loadTransactions() {
+    const formData = new FormData(document.getElementById('transaction-filters'));
+    const params = new URLSearchParams(formData);
+    
+    fetch(`/dashboard/transactions?${params}`, {
+        headers: {
+            'HX-Request': 'true'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('transaction-list').innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error loading transactions:', error);
+        document.getElementById('transaction-list').innerHTML = 
+            '<tr><td colspan="6" style="text-align: center; color: red;">Error loading transactions</td></tr>';
+    });
+}
+
+function loadMerchantStats() {
+    // This would typically fetch merchant-specific stats
+    // For now, we'll use the general stats endpoint
+    fetch('/dashboard/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-issued').textContent = data.total_earned || 0;
+            document.getElementById('recent-transactions').textContent = data.recent_transactions || 0;
+            // These would be merchant-specific in a full implementation
+            document.getElementById('active-vouchers').textContent = '0';
+            document.getElementById('customers-served').textContent = '0';
+        })
+        .catch(error => console.error('Error loading stats:', error));
+}
+
+function refreshDashboard() {
+    loadTransactions();
+    loadMerchantStats();
+    showAlert('Dashboard refreshed!', 'success');
+}
+
+// Voucher code copy functionality
+function copyVoucherCode(code) {
+    copyToClipboard(code);
+}
+
+// QR code display
+function showQRCode(qrData) {
+    const modal = document.createElement('div');
+    modal.className = 'qr-modal';
+    modal.style.display = 'block';
+    modal.innerHTML = `
+        <div class="qr-modal-content">
+            <span class="qr-close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h3>QR Code</h3>
+            <div class="qr-container">
+                <img src="${qrData}" alt="QR Code" class="qr-code">
+                <button onclick="copyToClipboard('${qrData}')" class="copy-button">
+                    Copy QR Data
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LoyaltyApp - African Restaurant Loyalty{% endblock %}</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Earn and redeem loyalty points at your favorite African restaurants">
+    <meta name="theme-color" content="#e74c3c">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LoyaltyApp">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iI2U3NGMzYyIvPgo8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSI2IiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>🍽️ LoyaltyApp</h1>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    {% if current_user.is_authenticated %}
+                        <li><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                        {% if current_user.user_type.value == 'merchant' %}
+                            <li><a href="{{ url_for('transactions.issue_points') }}">Issue Points</a></li>
+                        {% else %}
+                            <li><a href="{{ url_for('transactions.transfer_points') }}">Transfer Points</a></li>
+                            <li><a href="{{ url_for('transactions.redeem_voucher') }}">Redeem Voucher</a></li>
+                        {% endif %}
+                        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                        <li><span class="user-badge {{ current_user.user_type.value }}">{{ current_user.username }}</span></li>
+                    {% else %}
+                        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else 'success' if category == 'success' else 'info' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- PWA Install Section -->
+    <div class="install-section">
+        <h3>📱 Install LoyaltyApp</h3>
+        <p>Install our app for the best experience, offline access, and instant notifications!</p>
+        <button id="install-button" style="display: none;">
+            Install App
+        </button>
+    </div>
+
+    <!-- QR Scanner Modal -->
+    <div id="qr-modal" class="qr-modal">
+        <div class="qr-modal-content">
+            <span class="qr-close" id="close-qr-modal">&times;</span>
+            <h3>Scan QR Code</h3>
+            <video id="qr-video" autoplay playsinline></video>
+            <canvas id="qr-canvas" style="display: none;"></canvas>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 2rem; margin-top: 3rem; border-top: 1px solid #ddd;">
+        <p>&copy; 2025 LoyaltyApp - Empowering African Restaurants 🌍</p>
+        <p style="font-size: 0.9rem; color: #666;">
+            Built with ❤️ for the African market | 
+            <a href="https://github.com/yourusername/loyalty-app" target="_blank" rel="noopener">GitHub</a>
+        </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='qr-scanner.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

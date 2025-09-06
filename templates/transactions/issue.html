@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Issue Points - LoyaltyApp{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--primary-color);">
+        🎁 Issue Loyalty Points
+    </h1>
+    <p style="color: var(--dark-color);">
+        Choose how you want to distribute points to your customers
+    </p>
+</div>
+
+<div style="max-width: 700px; margin: 0 auto;">
+    <form method="POST">
+        <!-- Issue Type Selection -->
+        <div class="form-group">
+            <label>📋 Issue Type</label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
+                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #ddd; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s;">
+                    <input type="radio" name="issue_type" value="voucher" required style="margin-right: 0.5rem;">
+                    <div>
+                        <strong>🎫 Voucher Code</strong>
+                        <br><small>Generate a code customers can redeem</small>
+                    </div>
+                </label>
+                
+                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #ddd; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s;">
+                    <input type="radio" name="issue_type" value="qr_code" required style="margin-right: 0.5rem;">
+                    <div>
+                        <strong>📱 QR Code</strong>
+                        <br><small>Create a QR code for scanning</small>
+                    </div>
+                </label>
+                
+                <label style="display: flex; align-items: center; padding: 1rem; border: 2px solid #ddd; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s;">
+                    <input type="radio" name="issue_type" value="airdrop" required style="margin-right: 0.5rem;">
+                    <div>
+                        <strong>🎁 Airdrop</strong>
+                        <br><small>Send points directly to a customer</small>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Points Amount -->
+        <div class="form-group">
+            <label for="points">
+                💰 Points Amount
+            </label>
+            <input 
+                type="number" 
+                id="points" 
+                name="points" 
+                min="1" 
+                max="10000" 
+                required 
+                placeholder="Enter points amount (1-10,000)"
+            >
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+            <label for="description">
+                📝 Description (Optional)
+            </label>
+            <textarea 
+                id="description" 
+                name="description" 
+                rows="3" 
+                placeholder="Add a note about this point issuance (e.g., 'Happy hour bonus', 'First visit reward')"
+            ></textarea>
+        </div>
+
+        <!-- Customer Email (for airdrop) -->
+        <div class="form-group" id="customer-email-group" style="display: none;">
+            <label for="customer_email">
+                👤 Customer Email
+            </label>
+            <input 
+                type="email" 
+                id="customer_email" 
+                name="customer_email" 
+                placeholder="Enter customer's email address"
+            >
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="primary" style="width: 100%;">
+                🚀 Issue Points
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Results Section (shown after form submission) -->
+<div id="results-section" style="display: none; margin-top: 3rem;">
+    <article style="background: var(--light-color); padding: 2rem; border-radius: 0.5rem; text-align: center;">
+        <h2 style="color: var(--accent-color);">✅ Points Issued Successfully!</h2>
+        
+        <div id="voucher-result" style="display: none;">
+            <h3>Voucher Code Generated</h3>
+            <div style="background: white; padding: 1rem; border-radius: 0.5rem; margin: 1rem 0; font-family: monospace; font-size: 1.5rem; font-weight: bold; color: var(--primary-color);">
+                <span id="voucher-code"></span>
+            </div>
+            <button onclick="copyVoucherCode()" class="copy-button">
+                📋 Copy Code
+            </button>
+        </div>
+        
+        <div id="qr-result" style="display: none;">
+            <h3>QR Code Generated</h3>
+            <div class="qr-container">
+                <img id="qr-image" src="" alt="Generated QR Code" class="qr-code">
+                <br>
+                <button onclick="downloadQR()" class="copy-button">
+                    💾 Download QR
+                </button>
+            </div>
+        </div>
+        
+        <div id="airdrop-result" style="display: none;">
+            <h3>Points Airdropped</h3>
+            <p>Points have been successfully sent to the customer's account!</p>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <a href="{{ url_for('transactions.issue_points') }}" role="button" class="secondary">
+                Issue More Points
+            </a>
+            <a href="{{ url_for('dashboard.index') }}" role="button" class="outline">
+                Back to Dashboard
+            </a>
+        </div>
+    </article>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Handle issue type selection
+document.addEventListener('DOMContentLoaded', function() {
+    const issueTypeRadios = document.querySelectorAll('input[name="issue_type"]');
+    const customerEmailGroup = document.getElementById('customer-email-group');
+    const customerEmailInput = document.getElementById('customer_email');
+    
+    issueTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Update visual selection
+            document.querySelectorAll('label').forEach(label => {
+                if (label.querySelector('input[name="issue_type"]')) {
+                    if (label.querySelector('input[name="issue_type"]').checked) {
+                        label.style.borderColor = 'var(--primary-color)';
+                        label.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
+                    } else {
+                        label.style.borderColor = '#ddd';
+                        label.style.backgroundColor = 'transparent';
+                    }
+                }
+            });
+            
+            // Show/hide customer email field for airdrop
+            if (this.value === 'airdrop') {
+                customerEmailGroup.style.display = 'block';
+                customerEmailInput.required = true;
+            } else {
+                customerEmailGroup.style.display = 'none';
+                customerEmailInput.required = false;
+            }
+        });
+    });
+});
+
+// Handle form submission results (if passed from backend)
+{% if request.method == 'POST' %}
+document.addEventListener('DOMContentLoaded', function() {
+    // This would be populated by the Flask template with actual results
+    // For now, it's a placeholder for the success flow
+});
+{% endif %}
+
+function copyVoucherCode() {
+    const voucherCode = document.getElementById('voucher-code').textContent;
+    copyToClipboard(voucherCode);
+}
+
+function downloadQR() {
+    const qrImage = document.getElementById('qr-image');
+    const link = document.createElement('a');
+    link.download = 'loyalty-qr-code.png';
+    link.href = qrImage.src;
+    link.click();
+}
+
+// Points amount validation
+document.getElementById('points').addEventListener('input', function() {
+    const value = parseInt(this.value);
+    if (value > 10000) {
+        this.value = 10000;
+        showAlert('Maximum points per transaction is 10,000', 'info');
+    }
+    if (value < 1 && this.value !== '') {
+        this.value = 1;
+    }
+});
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const issueType = document.querySelector('input[name="issue_type"]:checked');
+    if (!issueType) {
+        e.preventDefault();
+        showAlert('Please select an issue type', 'error');
+        return;
+    }
+    
+    if (issueType.value === 'airdrop') {
+        const customerEmail = document.getElementById('customer_email').value;
+        if (!customerEmail) {
+            e.preventDefault();
+            showAlert('Please enter customer email for airdrop', 'error');
+            return;
+        }
+    }
+    
+    const points = document.getElementById('points').value;
+    if (!points || points < 1) {
+        e.preventDefault();
+        showAlert('Please enter a valid points amount', 'error');
+        return;
+    }
+});
+</script>
+{% endblock %}

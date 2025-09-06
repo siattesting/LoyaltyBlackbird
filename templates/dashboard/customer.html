@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Dashboard - LoyaltyApp{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--primary-color);">
+        🍽️ Customer Dashboard
+    </h1>
+    <p style="color: var(--dark-color);">
+        Welcome back, {{ user.username }}! Keep collecting those points! 
+    </p>
+</div>
+
+<!-- Points Balance -->
+<section class="points-display">
+    💰 Your Points Balance: <span id="points-balance">{{ user.points_balance }}</span> Points
+</section>
+
+<!-- Stats Overview -->
+<section class="stats-grid">
+    <div class="stat-card">
+        <span class="stat-value" id="total-earned">0</span>
+        <span class="stat-label">Total Earned</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value" id="total-spent">0</span>
+        <span class="stat-label">Total Spent</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value" id="restaurants-visited">0</span>
+        <span class="stat-label">Restaurants Visited</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value" id="recent-transactions">0</span>
+        <span class="stat-label">Recent Activity</span>
+    </div>
+</section>
+
+<!-- Quick Actions -->
+<section style="margin: 2rem 0;">
+    <h2 style="color: var(--secondary-color); margin-bottom: 1rem;">
+        ⚡ Quick Actions
+    </h2>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button id="qr-scan-button" role="button" class="primary">
+            📱 Scan QR Code
+        </button>
+        <a href="{{ url_for('transactions.redeem_voucher') }}" role="button" class="secondary">
+            🎫 Redeem Voucher
+        </a>
+        <a href="{{ url_for('transactions.transfer_points') }}" role="button" class="outline">
+            💸 Transfer Points
+        </a>
+        <button onclick="refreshDashboard()" role="button" class="outline">
+            🔄 Refresh Data
+        </button>
+    </div>
+</section>
+
+<!-- Transaction Filters -->
+<section class="filters">
+    <h3 style="color: var(--dark-color); margin-bottom: 1rem;">
+        🔍 Filter Transactions
+    </h3>
+    <form id="transaction-filters">
+        <div class="filter-grid">
+            <div>
+                <label for="type">Transaction Type</label>
+                <select id="type" name="type">
+                    <option value="">All Types</option>
+                    <option value="airdrop">Received Points</option>
+                    <option value="transfer">Transfers</option>
+                    <option value="redemption">Redemptions</option>
+                </select>
+            </div>
+            <div>
+                <label for="date_range">Date Range</label>
+                <select id="date_range" name="date_range">
+                    <option value="">All Time</option>
+                    <option value="7days">Last 7 Days</option>
+                    <option value="30days">Last 30 Days</option>
+                    <option value="90days">Last 90 Days</option>
+                </select>
+            </div>
+            <div>
+                <label for="sort">Sort By</label>
+                <select id="sort" name="sort">
+                    <option value="date_desc">Date (Newest)</option>
+                    <option value="date_asc">Date (Oldest)</option>
+                    <option value="points_desc">Points (High to Low)</option>
+                    <option value="points_asc">Points (Low to High)</option>
+                </select>
+            </div>
+        </div>
+    </form>
+</section>
+
+<!-- Transaction History -->
+<section>
+    <h2 style="color: var(--dark-color); margin-bottom: 1rem;">
+        📊 Transaction History
+    </h2>
+    <div class="transaction-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>From/To</th>
+                    <th>Points</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="transaction-list">
+                <!-- Transactions will be loaded here -->
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 2rem; color: #666;">
+                        <div class="spinner"></div>
+                        Loading transactions...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Point Transfer Quick Form -->
+<section style="margin: 3rem 0;">
+    <article style="background: var(--light-color); padding: 2rem; border-radius: 0.5rem;">
+        <h3 style="color: var(--accent-color); margin-bottom: 1rem;">
+            💸 Quick Point Transfer
+        </h3>
+        <form method="POST" action="{{ url_for('transactions.transfer_points') }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <div>
+                    <label for="quick_recipient_email">Recipient Email</label>
+                    <input type="email" id="quick_recipient_email" name="recipient_email" placeholder="friend@example.com" required>
+                </div>
+                <div>
+                    <label for="quick_points">Points</label>
+                    <input type="number" id="quick_points" name="points" min="1" max="{{ user.points_balance }}" placeholder="0" required>
+                </div>
+                <div>
+                    <button type="submit" class="primary">Send</button>
+                </div>
+            </div>
+            <input type="hidden" name="description" value="Quick transfer from dashboard">
+        </form>
+    </article>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Load transactions on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadTransactions();
+    loadCustomerStats();
+});
+
+function loadTransactions() {
+    const formData = new FormData(document.getElementById('transaction-filters'));
+    const params = new URLSearchParams(formData);
+    
+    fetch(`/dashboard/transactions?${params}`, {
+        headers: {
+            'HX-Request': 'true'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        document.getElementById('transaction-list').innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error loading transactions:', error);
+        document.getElementById('transaction-list').innerHTML = 
+            '<tr><td colspan="6" style="text-align: center; color: red;">Error loading transactions</td></tr>';
+    });
+}
+
+function loadCustomerStats() {
+    fetch('/dashboard/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('points-balance').textContent = data.points_balance;
+            document.getElementById('total-earned').textContent = data.total_earned;
+            document.getElementById('total-spent').textContent = data.total_spent;
+            document.getElementById('recent-transactions').textContent = data.recent_transactions;
+            
+            // Update max value for quick transfer
+            document.getElementById('quick_points').max = data.points_balance;
+            
+            // Estimate restaurants visited (simplified calculation)
+            const estimatedRestaurants = Math.max(1, Math.floor(data.recent_transactions / 3));
+            document.getElementById('restaurants-visited').textContent = estimatedRestaurants;
+        })
+        .catch(error => console.error('Error loading stats:', error));
+}
+
+function refreshDashboard() {
+    loadTransactions();
+    loadCustomerStats();
+    showAlert('Dashboard refreshed!', 'success');
+}
+
+// Update points balance in real-time
+setInterval(loadCustomerStats, 60000); // Every minute
+</script>
+{% endblock %}

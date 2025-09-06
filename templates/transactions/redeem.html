@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Redeem Voucher - LoyaltyApp{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--primary-color);">
+        🎫 Redeem Voucher
+    </h1>
+    <p style="color: var(--dark-color);">
+        Enter your voucher code to add points to your account
+    </p>
+</div>
+
+<!-- Current Balance Display -->
+<div class="points-display" style="margin-bottom: 2rem;">
+    💰 Your Current Balance: <span id="current-balance">{{ current_user.points_balance }}</span> Points
+</div>
+
+<div style="max-width: 500px; margin: 0 auto;">
+    <article>
+        <form method="POST">
+            <div class="form-group">
+                <label for="voucher_code">
+                    🎫 Voucher Code
+                </label>
+                <input 
+                    type="text" 
+                    id="voucher_code" 
+                    name="voucher_code" 
+                    required 
+                    placeholder="Enter your voucher code (e.g., ABC12345)"
+                    style="text-transform: uppercase; font-family: monospace; font-size: 1.2rem; text-align: center;"
+                    maxlength="20"
+                >
+                <small style="color: #666; display: block; margin-top: 0.5rem;">
+                    Voucher codes are usually 6-8 characters long
+                </small>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="primary" style="width: 100%;">
+                    ✨ Redeem Voucher
+                </button>
+            </div>
+        </form>
+    </article>
+</div>
+
+<!-- Alternative Options -->
+<section style="margin: 3rem 0; text-align: center;">
+    <h3 style="color: var(--secondary-color); margin-bottom: 1rem;">
+        📱 Other Ways to Earn Points
+    </h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+        <article style="background: var(--light-color); padding: 2rem; border-radius: 0.5rem; text-align: center;">
+            <h4 style="color: var(--primary-color); margin-bottom: 1rem;">📱 Scan QR Code</h4>
+            <p style="margin-bottom: 1.5rem;">Scan QR codes at participating restaurants to earn points instantly</p>
+            <button id="qr-scan-button" role="button" class="primary">
+                Scan QR Code
+            </button>
+        </article>
+        
+        <article style="background: var(--light-color); padding: 2rem; border-radius: 0.5rem; text-align: center;">
+            <h4 style="color: var(--accent-color); margin-bottom: 1rem;">🍽️ Visit Restaurants</h4>
+            <p style="margin-bottom: 1.5rem;">Check in at LoyaltyApp partner restaurants and earn points automatically</p>
+            <a href="#" role="button" class="secondary">
+                Find Restaurants
+            </a>
+        </article>
+    </div>
+</section>
+
+<!-- Recent Redemptions -->
+<section style="margin: 3rem 0; max-width: 800px; margin-left: auto; margin-right: auto;">
+    <h2 style="color: var(--dark-color); margin-bottom: 1rem;">
+        📊 Recent Redemptions
+    </h2>
+    <div class="transaction-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Voucher Code</th>
+                    <th>Points Earned</th>
+                    <th>Restaurant</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="recent-redemptions">
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 2rem; color: #666;">
+                        <div class="spinner"></div>
+                        Loading recent redemptions...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Redemption Tips -->
+<section style="margin: 3rem 0; background: linear-gradient(135deg, var(--gold-color), var(--secondary-color)); padding: 2rem; border-radius: 0.5rem; color: white;">
+    <h3 style="color: white; margin-bottom: 1rem;">💡 Redemption Tips</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        <div>
+            <strong>✅ Valid Codes</strong>
+            <p>Voucher codes are case-insensitive and contain letters and numbers</p>
+        </div>
+        <div>
+            <strong>⏰ One-Time Use</strong>
+            <p>Each voucher code can only be redeemed once</p>
+        </div>
+        <div>
+            <strong>🔍 Check Expiry</strong>
+            <p>Some vouchers may have expiration dates</p>
+        </div>
+        <div>
+            <strong>🎁 Bonus Points</strong>
+            <p>Look out for special promotional codes with bonus points!</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadRecentRedemptions();
+    setupVoucherInput();
+});
+
+function setupVoucherInput() {
+    const voucherInput = document.getElementById('voucher_code');
+    
+    // Auto-uppercase and format input
+    voucherInput.addEventListener('input', function() {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        
+        // Visual feedback for valid format
+        if (this.value.length >= 6 && this.value.length <= 10) {
+            this.style.backgroundColor = 'rgba(39, 174, 96, 0.1)';
+            this.style.borderColor = 'var(--accent-color)';
+        } else if (this.value.length > 0) {
+            this.style.backgroundColor = 'rgba(231, 76, 60, 0.1)';
+            this.style.borderColor = 'var(--primary-color)';
+        } else {
+            this.style.backgroundColor = '';
+            this.style.borderColor = '';
+        }
+    });
+    
+    // Paste event handling
+    voucherInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        const paste = (e.clipboardData || window.clipboardData).getData('text');
+        const cleaned = paste.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        this.value = cleaned.substring(0, 20); // Max length
+        this.dispatchEvent(new Event('input'));
+    });
+}
+
+function loadRecentRedemptions() {
+    fetch('/dashboard/transactions?type=redemption&sort=date_desc', {
+        headers: {
+            'HX-Request': 'true'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        const tbody = document.getElementById('recent-redemptions');
+        if (html.trim()) {
+            tbody.innerHTML = html;
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #666;">No redemptions yet</td></tr>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading redemptions:', error);
+        document.getElementById('recent-redemptions').innerHTML = 
+            '<tr><td colspan="5" style="text-align: center; color: red;">Error loading redemptions</td></tr>';
+    });
+}
+
+// Form submission with validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const voucherCode = document.getElementById('voucher_code').value;
+    
+    if (voucherCode.length < 6 || voucherCode.length > 10) {
+        e.preventDefault();
+        showAlert('Please enter a valid voucher code (6-10 characters)', 'error');
+        return false;
+    }
+    
+    // Disable submit button to prevent double submission
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Redeeming...';
+    
+    // Re-enable after 3 seconds (in case of error)
+    setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '✨ Redeem Voucher';
+    }, 3000);
+});
+
+// Update balance after successful redemption
+{% if request.method == 'POST' %}
+document.addEventListener('DOMContentLoaded', function() {
+    // Refresh balance and redemptions list
+    setTimeout(() => {
+        fetch('/dashboard/stats')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('current-balance').textContent = data.points_balance;
+            });
+        loadRecentRedemptions();
+    }, 1000);
+});
+{% endif %}
+
+// Demo voucher code generator (for testing)
+function generateDemoVoucher() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    document.getElementById('voucher_code').value = result;
+    showAlert('Demo voucher generated: ' + result, 'info');
+}
+
+// Add demo button for testing (can be removed in production)
+{% if current_user.user_type.value == 'customer' %}
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const demoBtn = document.createElement('button');
+    demoBtn.type = 'button';
+    demoBtn.className = 'outline';
+    demoBtn.style.width = '100%';
+    demoBtn.style.marginTop = '0.5rem';
+    demoBtn.textContent = '🎲 Generate Demo Code (Testing)';
+    demoBtn.onclick = generateDemoVoucher;
+    form.appendChild(demoBtn);
+});
+{% endif %}
+</script>
+{% endblock %}

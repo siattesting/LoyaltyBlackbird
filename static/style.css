@@ -1,0 +1,373 @@
+/* African-inspired color scheme and custom styles */
+:root {
+  --primary-color: #e74c3c;
+  --secondary-color: #f39c12;
+  --accent-color: #27ae60;
+  --dark-color: #2c3e50;
+  --light-color: #ecf0f1;
+  --gold-color: #f1c40f;
+  --earth-color: #8b4513;
+}
+
+/* Override Pico.css colors with African-inspired palette */
+:root:not([data-theme="dark"]) {
+  --primary: var(--primary-color);
+  --primary-hover: #c0392b;
+  --primary-focus: rgba(231, 76, 60, 0.125);
+  --secondary: var(--secondary-color);
+  --contrast: var(--dark-color);
+}
+
+/* Custom header styling */
+.header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  color: white;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  color: white;
+  margin: 0;
+  text-align: center;
+}
+
+.header nav {
+  margin-top: 1rem;
+}
+
+.header nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.header nav a {
+  color: white;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.3s;
+}
+
+.header nav a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Dashboard stats cards */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  display: block;
+}
+
+.stat-label {
+  color: var(--dark-color);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Transaction filters */
+.filters {
+  background: var(--light-color);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* Transaction table */
+.transaction-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.transaction-table table {
+  margin: 0;
+}
+
+.transaction-table th {
+  background: var(--primary-color);
+  color: white;
+  position: sticky;
+  top: 0;
+}
+
+.transaction-table tr:hover {
+  background-color: rgba(231, 76, 60, 0.05);
+}
+
+/* QR Code styling */
+.qr-container {
+  text-align: center;
+  padding: 2rem;
+  background: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.qr-code {
+  max-width: 256px;
+  height: auto;
+  margin: 1rem auto;
+  display: block;
+}
+
+/* QR Scanner Modal */
+.qr-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.9);
+}
+
+.qr-modal-content {
+  position: relative;
+  margin: 10% auto;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  background: white;
+  border-radius: 0.5rem;
+}
+
+.qr-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #aaa;
+}
+
+.qr-close:hover {
+  color: black;
+}
+
+#qr-video {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
+#qr-canvas {
+  display: none;
+}
+
+/* Install button */
+.install-section {
+  text-align: center;
+  margin: 2rem 0;
+  padding: 2rem;
+  background: linear-gradient(135deg, var(--accent-color), var(--gold-color));
+  border-radius: 0.5rem;
+  color: white;
+}
+
+#install-button {
+  display: none;
+  background: white;
+  color: var(--accent-color);
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+#install-button:hover {
+  transform: scale(1.05);
+}
+
+/* Alert messages */
+.alert {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.alert-error {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+.alert-info {
+  background-color: #d1ecf1;
+  border-color: #bee5eb;
+  color: #0c5460;
+}
+
+/* Points display */
+.points-display {
+  background: linear-gradient(135deg, var(--gold-color), var(--secondary-color));
+  color: white;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 1rem 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+  
+  .header nav ul {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .transaction-table {
+    font-size: 0.9rem;
+  }
+  
+  .qr-modal-content {
+    margin: 5% auto;
+    width: 95%;
+  }
+}
+
+/* Loading spinner */
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Form enhancements */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+/* Copy button */
+.copy-button {
+  background: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.copy-button:hover {
+  background: #e67e22;
+}
+
+/* African patterns and decorative elements */
+.pattern-bg {
+  background-image: 
+    radial-gradient(circle at 20px 20px, rgba(231, 76, 60, 0.1) 1px, transparent 1px),
+    radial-gradient(circle at 60px 60px, rgba(243, 156, 18, 0.1) 1px, transparent 1px);
+  background-size: 80px 80px, 120px 120px;
+}
+
+/* User type badges */
+.user-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-badge.merchant {
+  background: var(--secondary-color);
+  color: white;
+}
+
+.user-badge.customer {
+  background: var(--accent-color);
+  color: white;
+}
+
+/* Transaction type indicators */
+.transaction-type {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.transaction-type.voucher_issue { background: #e8f5e8; color: #2d5d2d; }
+.transaction-type.qr_issue { background: #e8f0ff; color: #1e40af; }
+.transaction-type.airdrop { background: #fff3cd; color: #856404; }
+.transaction-type.transfer { background: #f0e6ff; color: #5b21b6; }
+.transaction-type.redemption { background: #ffeaa7; color: #b7791f; }
