@@ -36,7 +36,9 @@ class User(UserMixin, db.Model):
     received_transactions: Mapped[List["Transaction"]] = relationship(
         "Transaction", foreign_keys="Transaction.receiver_id", back_populates="receiver"
     )
-    vouchers: Mapped[List["Voucher"]] = relationship("Voucher", back_populates="merchant")
+    vouchers: Mapped[List["Voucher"]] = relationship(
+        "Voucher", foreign_keys="Voucher.merchant_id", back_populates="merchant"
+    )
 
 class Transaction(db.Model):
     __tablename__ = 'transactions'
