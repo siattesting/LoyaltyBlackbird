@@ -1,0 +1,51 @@
+I want to build a full-stack loyalty program web app inspired by the Blackbird payment/loyalty system (for restaurants and convenience stores in African markets), 
+Refer to the following resources for inspiration:
+- https://techcrunch.com/2025/04/08/blackbird-gobbles-up-50m-for-its-blockchain-based-payment-loyalty-app-for-restaurants/ 
+- https://www.blackbird.xyz/
+
+Use the following technologies and features:
+
+📦 **Backend Stack:**
+- Python Flask with the application factory pattern
+- PostgreSQL
+- Use **Flask-SQLAlchemy-Lite** (not classic Flask-SQLAlchemy), and use **modern SQLAlchemy 2.0 ORM syntax** only:
+  - Use `Mapped[]` and `mapped_column` for fields
+  - Use `relationship()` with `List[...]` for related models
+  - Use `session.scalar()` and `session.scalars()` for queries
+- Use **Flask-Security** for user authentication/authorization
+- Use `blueprints` to separate modules (auth, dashboard, transactions, etc.)
+- Enable  QR code generation functionality as well for points transfer, points redemption, voucher issuance
+_ Enable seamless filtering/sorting/updating of transaction tables for both merchants and customers
+
+🎨 **Frontend UI:**
+- Use basic HTML templates styled with **Pico.css**
+- Build responsive, mobile-first layouts
+- Add a **custom "Install App"** button for PWA support
+
+🧩 **Core Features:**
+1. Merchants can issue loyalty points to customers via:
+- Voucher codes
+- QR code scans
+- points airdrop
+2. Customers can view points earned/spent and can send points to other users
+3. Dashboard includes:
+   - Filter by type, sender/receiver, date range
+   - Sort by points, date
+   - Preset date filters (last 7, 30, 90 days)
+4. Offline-first PWA support with:
+   - Background sync for forms
+   - Service worker for caching
+   
+5. Add QR code **scanning support via camera**
+6. Include both JSON endpoints and HTML templates
+
+📁 **Project Structure:**
+- Use a app factory pattern for Flask project layout with:
+  - `/auth` for registration and login
+  - `/dashboard` for merchant and customer views
+  - `/transactions` for point issuance and transfers
+  - `/static/`, `/templates/`, and `/templates/partials/`
+- Include a `Dockerfile` and `docker-compose.yml`
+- Use a `.env` file for config
+
+Please generate the project step-by-step and keep the code modular, reusable, and secure. Include inline comments where helpful. 
