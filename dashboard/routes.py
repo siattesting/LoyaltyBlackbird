@@ -1,6 +1,7 @@
 from flask import render_template, request, jsonify
 from flask_login import login_required, current_user
-from datetime import datetime, timedelta
+from sqlalchemy import select, func
+from datetime import datetime, timedelta, timezone
 from dashboard import dashboard_bp
 from app import db
 from models import User, Transaction, UserType, TransactionType
@@ -25,7 +26,7 @@ def get_transactions():
     sort_by = request.args.get('sort', 'date_desc')
     
     # Base query - get transactions where user is sender or receiver
-    query = db.select(Transaction).where(
+    query = select(Transaction).where(
         (Transaction.sender_id == current_user.id) |
         (Transaction.receiver_id == current_user.id)
     )
@@ -92,21 +93,21 @@ def get_stats():
     
     # Calculate user stats
     total_earned = db.session.scalar(
-        db.select(db.func.sum(Transaction.points)).where(
+        select(func.sum(Transaction.points)).where(
             Transaction.receiver_id == current_user.id
         )
     ) or 0
     
     total_spent = db.session.scalar(
-        db.select(db.func.sum(Transaction.points)).where(
+        select(func.sum(Transaction.points)).where(
             Transaction.sender_id == current_user.id
         )
     ) or 0
     
     # Recent transactions count (last 30 days)
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
     recent_transactions = db.session.scalar(
-        db.select(db.func.count(Transaction.id)).where(
+        select(func.count(Transaction.id)).where(
             ((Transaction.sender_id == current_user.id) |
              (Transaction.receiver_id == current_user.id)) &
             (Transaction.created_at >= thirty_days_ago)

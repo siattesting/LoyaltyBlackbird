@@ -1,9 +1,10 @@
 from typing import List, Optional
 from datetime import datetime
-from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, Enum
+from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_login import UserMixin
-from app import db
+# from app import db
+from extensions import db, Model
 import enum
 
 class UserType(enum.Enum):
@@ -17,7 +18,7 @@ class TransactionType(enum.Enum):
     TRANSFER = "transfer"
     REDEMPTION = "redemption"
 
-class User(UserMixin, db.Model):
+class User(UserMixin, Model):
     __tablename__ = 'users'
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -40,13 +41,13 @@ class User(UserMixin, db.Model):
         "Voucher", foreign_keys="Voucher.merchant_id", back_populates="merchant"
     )
 
-class Transaction(db.Model):
+class Transaction(Model):
     __tablename__ = 'transactions'
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     transaction_type: Mapped[TransactionType] = mapped_column(Enum(TransactionType), nullable=False)
-    sender_id: Mapped[Optional[int]] = mapped_column(Integer, db.ForeignKey('users.id'))
-    receiver_id: Mapped[Optional[int]] = mapped_column(Integer, db.ForeignKey('users.id'))
+    sender_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'))
+    receiver_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'))
     points: Mapped[float] = mapped_column(Float, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
     voucher_code: Mapped[Optional[str]] = mapped_column(String(50))
@@ -61,15 +62,15 @@ class Transaction(db.Model):
         "User", foreign_keys=[receiver_id], back_populates="received_transactions"
     )
 
-class Voucher(db.Model):
+class Voucher(Model):
     __tablename__ = 'vouchers'
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
-    merchant_id: Mapped[int] = mapped_column(Integer, db.ForeignKey('users.id'), nullable=False)
+    merchant_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
     points_value: Mapped[float] = mapped_column(Float, nullable=False)
     is_redeemed: Mapped[bool] = mapped_column(Boolean, default=False)
-    redeemed_by: Mapped[Optional[int]] = mapped_column(Integer, db.ForeignKey('users.id'))
+    redeemed_by: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     redeemed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
     

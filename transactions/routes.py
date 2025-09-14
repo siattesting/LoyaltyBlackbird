@@ -5,7 +5,8 @@ import io
 import base64
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from datetime import datetime
+from datetime import datetime, timezone
+from sqlalchemy import select
 from transactions import transactions_bp
 from app import db
 from models import User, Transaction, Voucher, UserType, TransactionType
@@ -99,7 +100,7 @@ def issue_points():
                 # Airdrop to specific customer
                 customer_email = request.form['customer_email']
                 customer = db.session.scalar(
-                    db.select(User).where(User.email == customer_email)
+                    select(User).where(User.email == customer_email)
                 )
                 
                 if not customer or customer.user_type != UserType.CUSTOMER:
@@ -148,7 +149,7 @@ def transfer_points():
         
         # Find recipient
         recipient = db.session.scalar(
-            db.select(User).where(User.email == recipient_email)
+            select(User).where(User.email == recipient_email)
         )
         
         if not recipient:
@@ -194,7 +195,7 @@ def redeem_voucher():
         
         # Find voucher
         voucher = db.session.scalar(
-            db.select(Voucher).where(Voucher.code == voucher_code)
+            select(Voucher).where(Voucher.code == voucher_code)
         )
         
         if not voucher:

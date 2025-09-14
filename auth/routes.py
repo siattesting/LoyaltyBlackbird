@@ -1,6 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import select
 from auth import auth_bp
 from app import db
 from models import User, UserType
@@ -12,7 +13,7 @@ def login():
         password = request.form['password']
         
         user = db.session.scalar(
-            db.select(User).where(User.email == email)
+            select(User).where(User.email == email)
         )
         
         if user and check_password_hash(user.password_hash, password):
@@ -36,7 +37,7 @@ def register():
         
         # Check if user already exists
         existing_user = db.session.scalar(
-            db.select(User).where(
+            select(User).where(
                 (User.email == email) | (User.username == username)
             )
         )
