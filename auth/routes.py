@@ -5,55 +5,55 @@ from sqlalchemy import select
 from auth import auth_bp
 from app import db
 from models import User, UserType
+from .forms import LoginForm, RegistrationForm
+from utils import is_safe_url
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        
+    form = LoginForm()
+    if form.validate_on_submit():
         user = db.session.scalar(
-            select(User).where(User.email == email)
+            select(User).where(User.email == form.email.data)
         )
         
-        if user and check_password_hash(user.password_hash, password):
+        if user and check_password_hash(user.password_hash, form.password.data):
             login_user(user)
             flash('Successfully logged in!', 'success')
             next_page = request.args.get('next')
+            if not is_safe_url(next_page):
+                return redirect(url_for('dashboard.index'))
             return redirect(next_page) if next_page else redirect(url_for('dashboard.index'))
         else:
             flash('Invalid email or password', 'error')
     
-    return render_template('auth/login.html')
+    return render_template('auth/login.html', form=form)
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        user_type = UserType(request.form['user_type'])
-        business_name = request.form.get('business_name', '')
-        
-        # Check if user already exists
+    form = RegistrationForm()
+    if form.validate_on_submit():
         existing_user = db.session.scalar(
             select(User).where(
-                (User.email == email) | (User.username == username)
+                (User.email == form.email.data) | (User.username == form.username.data)
             )
         )
         
         if existing_user:
             flash('User with this email or username already exists', 'error')
-            return render_template('auth/register.html')
+            return render_template('auth/register.html', form=form)
         
-        # Create new user
         user = User(
-            username=username,
-            email=email,
-            password_hash=generate_password_hash(password),
-            user_type=user_type,
-            business_name=business_name if user_type == UserType.MERCHANT else None
+            username=form.username.data,
+            email=form.email.data,
+            phone=form.phone.data,
+            password_hash=generate_password_hash(form.password.data),
+            user_type=UserType(form.user_type.data),
+            business_name=form.business_name.data if form.user_type.data == 'merchant' else None,
+            address=form.address.data if form.user_type.data == 'merchant' else None,
+            # latitude=form.latitude.data if form.user_type.data == 'merchant' else None,
+            # longitude=form.longitude.data if form.user_type.data == 'merchant' else None
         )
+        print(user)
         
         db.session.add(user)
         db.session.commit()
@@ -61,8 +61,12 @@ def register():
         login_user(user)
         flash('Registration successful!', 'success')
         return redirect(url_for('dashboard.index'))
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f"Error in {field}: {error}", 'error')
     
-    return render_template('auth/register.html')
+    return render_template('auth/register.html', form=form)
 
 @auth_bp.route('/logout')
 @login_required

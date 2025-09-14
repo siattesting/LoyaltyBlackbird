@@ -1,10 +1,16 @@
-const CACHE_NAME = 'loyalty-app-v1';
+const CACHE_NAME = 'loyalty-app-v2';
+const DYNAMIC_CACHE_NAME = 'loyalty-app-dynamic-v2';
 const urlsToCache = [
   '/',
   '/static/style.css',
   '/static/app.js',
+  '/static/qr-scanner.js',
   '/auth/login',
+  '/auth/register',
   '/dashboard/',
+  '/transactions/issue',
+  '/transactions/transfer',
+  '/transactions/redeem',
   'https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css'
 ];
 
@@ -19,59 +25,40 @@ self.addEventListener('install', event => {
   );
 });
 
-// Fetch event - serve cached content when offline
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached version or fetch from network
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
-  );
-});
-
-// Background sync for form submissions
-self.addEventListener('sync', event => {
-  if (event.tag === 'background-sync') {
-    event.waitUntil(doBackgroundSync());
-  }
-});
-
-function doBackgroundSync() {
-  // Handle background sync for offline form submissions
-  return caches.open('form-cache').then(cache => {
-    return cache.keys().then(requests => {
-      return Promise.all(
-        requests.map(request => {
-          return cache.match(request).then(response => {
-            // Attempt to submit cached form data
-            return fetch(request.url, {
-              method: 'POST',
-              body: response.body,
-              headers: response.headers
-            });
-          });
-        })
-      );
-    });
-  });
-}
-
 // Activate service worker
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== CACHE_NAME && cacheName !== DYNAMIC_CACHE_NAME) {
             return caches.delete(cacheName);
           }
         })
       );
+    })
+  );
+});
+
+// Fetch event - network first strategy
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    fetch(event.request).then(response => {
+      // Check if we received a valid response
+      if (!response || response.status !== 200 || response.type !== 'basic') {
+        return response;
+      }
+
+      var responseToCache = response.clone();
+
+      caches.open(DYNAMIC_CACHE_NAME)
+        .then(cache => {
+          cache.put(event.request, responseToCache);
+        });
+
+      return response;
+    }).catch(() => {
+      return caches.match(event.request);
     })
   );
 });

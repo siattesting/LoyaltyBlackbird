@@ -4,7 +4,8 @@ from sqlalchemy import select, func
 from datetime import datetime, timedelta, timezone
 from dashboard import dashboard_bp
 from app import db
-from models import User, Transaction, UserType, TransactionType
+from models import User, Transaction, UserType, TransactionType, Voucher
+from transactions.forms import TransferPointsForm
 
 @dashboard_bp.route('/')
 @login_required
@@ -12,7 +13,32 @@ def index():
     if current_user.user_type == UserType.MERCHANT:
         return render_template('dashboard/merchant.html', user=current_user)
     else:
-        return render_template('dashboard/customer.html', user=current_user)
+        form = TransferPointsForm()
+        return render_template('dashboard/customer.html', user=current_user, form=form)
+
+@dashboard_bp.route('/profile')
+@login_required
+def profile():
+    return render_template('dashboard/profile.html', user=current_user)
+
+@dashboard_bp.route('/voucher_history')
+@login_required
+def voucher_history():
+    vouchers = db.session.scalars(
+        select(Voucher).where(
+            (Voucher.merchant_id == current_user.id) |
+            (Voucher.redeemed_by == current_user.id)
+        ).order_by(Voucher.created_at.desc())
+    ).all()
+
+    # Fetch related user objects for display
+    for voucher in vouchers:
+        if voucher.merchant_id:
+            voucher.merchant = db.session.get(User, voucher.merchant_id)
+        if voucher.redeemed_by:
+            voucher.redeemed_by_user = db.session.get(User, voucher.redeemed_by)
+
+    return render_template('dashboard/voucher_history.html', vouchers=vouchers, current_user=current_user)
 
 @dashboard_bp.route('/transactions')
 @login_required
@@ -37,7 +63,7 @@ def get_transactions():
     
     # Date range filter
     if date_range:
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         if date_range == '7days':
             start_date = today - timedelta(days=7)
         elif date_range == '30days':
@@ -91,32 +117,67 @@ def get_transactions():
 def get_stats():
     """Get user statistics for dashboard"""
     
-    # Calculate user stats
-    total_earned = db.session.scalar(
-        select(func.sum(Transaction.points)).where(
-            Transaction.receiver_id == current_user.id
-        )
-    ) or 0
-    
-    total_spent = db.session.scalar(
-        select(func.sum(Transaction.points)).where(
-            Transaction.sender_id == current_user.id
-        )
-    ) or 0
-    
-    # Recent transactions count (last 30 days)
-    thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
-    recent_transactions = db.session.scalar(
-        select(func.count(Transaction.id)).where(
-            ((Transaction.sender_id == current_user.id) |
-             (Transaction.receiver_id == current_user.id)) &
-            (Transaction.created_at >= thirty_days_ago)
-        )
-    ) or 0
-    
-    return jsonify({
-        'points_balance': current_user.points_balance,
-        'total_earned': total_earned,
-        'total_spent': total_spent,
-        'recent_transactions': recent_transactions
-    })
+    if current_user.user_type == UserType.MERCHANT:
+        total_issued = db.session.scalar(
+            select(func.sum(Transaction.points)).where(
+                Transaction.sender_id == current_user.id,
+                Transaction.transaction_type != TransactionType.REDEMPTION
+            )
+        ) or 0
+        
+        active_vouchers = db.session.scalar(
+            select(func.count(Voucher.id)).where(
+                Voucher.merchant_id == current_user.id,
+                Voucher.is_redeemed == False
+            )
+        ) or 0
+        
+        customers_served = db.session.scalar(
+            select(func.count(func.distinct(Transaction.receiver_id))).where(
+                Transaction.sender_id == current_user.id
+            )
+        ) or 0
+
+        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        recent_transactions = db.session.scalar(
+            select(func.count(Transaction.id)).where(
+                Transaction.sender_id == current_user.id,
+                Transaction.created_at >= thirty_days_ago
+            )
+        ) or 0
+        
+        return jsonify({
+            'total_issued': total_issued,
+            'active_vouchers': active_vouchers,
+            'customers_served': customers_served,
+            'recent_transactions': recent_transactions
+        })
+
+    else: # Customer stats
+        total_earned = db.session.scalar(
+            select(func.sum(Transaction.points)).where(
+                Transaction.receiver_id == current_user.id
+            )
+        ) or 0
+        
+        total_spent = db.session.scalar(
+            select(func.sum(Transaction.points)).where(
+                Transaction.sender_id == current_user.id
+            )
+        ) or 0
+        
+        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        recent_transactions = db.session.scalar(
+            select(func.count(Transaction.id)).where(
+                ((Transaction.sender_id == current_user.id) |
+                 (Transaction.receiver_id == current_user.id)) &
+                (Transaction.created_at >= thirty_days_ago)
+            )
+        ) or 0
+        
+        return jsonify({
+            'points_balance': current_user.points_balance,
+            'total_earned': total_earned,
+            'total_spent': total_spent,
+            'recent_transactions': recent_transactions
+        })

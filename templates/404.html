@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Page Not Found{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-top: 4rem;">
+    <h1 style="font-size: 4rem; color: var(--primary-color);">404</h1>
+    <h2>Oops! Page Not Found</h2>
+    <p>The page you are looking for does not exist. It might have been moved or deleted.</p>
+    <a href="{{ url_for('index') }}" class="button">Go Back to Home</a>
+</div>
+{% endblock %}

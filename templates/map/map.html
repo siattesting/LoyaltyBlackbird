@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Merchants Map - LoyaltyApp{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+<style>
+    #map {
+        height: 600px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--primary-color);">
+        🗺️ Merchants Map
+    </h1>
+    <p style="color: var(--dark-color);">
+        Find our partner restaurants near you
+    </p>
+</div>
+
+<div class="form-group">
+    <label for="location-filter">Filter by Location (e.g., city, street)</label>
+    <input type="text" id="location-filter" placeholder="Enter location">
+    <button id="apply-filter-btn" class="button primary">Apply Filter</button>
+</div>
+
+<div id="map"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const map = L.map('map').setView([0, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        const locationFilterInput = document.getElementById('location-filter');
+        const applyFilterBtn = document.getElementById('apply-filter-btn');
+
+        function loadMerchants(location = '') {
+            let url = '/map/merchants';
+            if (location) {
+                url += `?location=${encodeURIComponent(location)}`;
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(merchants => {
+                    // Clear existing markers
+                    map.eachLayer(function (layer) {
+                        if (layer instanceof L.Marker) {
+                            map.removeLayer(layer);
+                        }
+                    });
+
+                    merchants.forEach(merchant => {
+                        // Since latitude and longitude are removed from the model, we can't display them on the map
+                        // We would need a geocoding service to convert address to lat/lng
+                        // For now, we'll just display a message if no lat/lng
+                        const marker = L.marker([0, 0]).addTo(map); // Placeholder
+                        marker.bindPopup(`<b>${merchant.business_name}</b><br>${merchant.address}<br><i>(Location not available)</i>`);
+                    });
+                });
+        }
+
+        applyFilterBtn.addEventListener('click', () => {
+            loadMerchants(locationFilterInput.value);
+        });
+
+        // Initial load
+        loadMerchants();
+    });
+</script>
+{% endblock %}

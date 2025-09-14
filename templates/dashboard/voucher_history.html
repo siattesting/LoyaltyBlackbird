@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Voucher History - LoyaltyApp{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--primary-color);">
+        🎫 Voucher History
+    </h1>
+    <p style="color: var(--dark-color);">
+        Overview of vouchers you have issued or redeemed
+    </p>
+</div>
+
+<section>
+    <div class="transaction-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Value</th>
+                    <th>Status</th>
+                    <th>Issued By</th>
+                    <th>Redeemed By</th>
+                    <th>Issued On</th>
+                    <th>Redeemed On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for voucher in vouchers %}
+                <tr>
+                    <td>{{ voucher.code }}</td>
+                    <td>{{ voucher.points_value }}</td>
+                    <td>
+                        {% if voucher.is_redeemed %}
+                            <span style="color: var(--accent-color); font-weight: bold;">Redeemed</span>
+                        {% else %}
+                            <span style="color: var(--primary-color); font-weight: bold;">Active</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ voucher.merchant.username if voucher.merchant else 'N/A' }}</td>
+                    <td>
+                        {% if voucher.redeemed_by_user %}
+                            {{ voucher.redeemed_by_user.username }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>{{ voucher.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ voucher.redeemed_at.strftime('%Y-%m-%d %H:%M') if voucher.redeemed_at else 'N/A' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 2rem; color: #666;">
+                        No voucher history found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Helper function to get user by ID (if needed for display)
+    // This would typically be an API call or passed from Flask
+    function get_user_by_id(user_id) {
+        // Placeholder: In a real app, you'd fetch this from an API
+        // For now, assuming current_user is available or passed
+        if ({{ current_user.id }} == user_id) {
+            return { username: "{{ current_user.username }}" };
+        }
+        return null; // Or fetch from a list of users
+    }
+</script>
+{% endblock %}

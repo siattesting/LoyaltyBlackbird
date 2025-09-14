@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - LoyaltyApp{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="color: var(--primary-color);">
+        👤 User Profile
+    </h1>
+    <p style="color: var(--dark-color);">
+        Manage your account information and view your activity
+    </p>
+</div>
+
+<section class="user-profile-card">
+    <div class="profile-header">
+        <span class="profile-avatar">{{ user.username[0]|upper }}</span>
+        <h2>{{ user.username }}</h2>
+        <p class="user-type-badge {{ user.user_type.value }}">{{ user.user_type.value }}</p>
+    </div>
+
+    <div class="profile-details">
+        <h3>Account Details</h3>
+        <ul>
+            <li><strong>Email:</strong> {{ user.email }}</li>
+            <li><strong>Phone:</strong> {{ user.phone if user.phone else 'N/A' }}</li>
+            {% if user.user_type.value == 'merchant' %}
+                <li><strong>Business Name:</strong> {{ user.business_name if user.business_name else 'N/A' }}</li>
+                <li><strong>Address:</strong> {{ user.address if user.address else 'N/A' }}</li>
+            {% endif %}
+            <li><strong>Points Balance:</strong> {{ user.points_balance }}</li>
+            <li><strong>Member Since:</strong> {{ user.created_at.strftime('%Y-%m-%d') }}</li>
+        </ul>
+    </div>
+
+    <div class="profile-actions">
+        <h3>Activity & History</h3>
+        <div class="action-buttons">
+            <a href="{{ url_for('dashboard.get_transactions') }}" class="button primary">View All Transactions</a>
+            <a href="{{ url_for('dashboard.voucher_history') }}" class="button secondary">View Voucher History</a>
+            <!-- Add more actions like 'Edit Profile' later -->
+        </div>
+    </div>
+</section>
+
+<style>
+.user-profile-card {
+    background: var(--light-color);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    max-width: 700px;
+    margin: 2rem auto;
+    text-align: center;
+}
+
+.profile-header {
+    margin-bottom: 1.5rem;
+}
+
+.profile-avatar {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 80px;
+    height: 80px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.profile-header h2 {
+    margin-bottom: 0.5rem;
+    color: var(--dark-color);
+}
+
+.user-type-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-top: 0.5rem;
+}
+
+.user-type-badge.merchant {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.user-type-badge.customer {
+    background: var(--accent-color);
+    color: white;
+}
+
+.profile-details {
+    text-align: left;
+    margin-bottom: 2rem;
+}
+
+.profile-details h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.profile-details ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.profile-details li {
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+
+.profile-actions h3 {
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+.action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.action-buttons .button {
+    flex-grow: 1;
+    max-width: 250px;
+}
+
+@media (max-width: 768px) {
+    .user-profile-card {
+        padding: 1.5rem;
+    }
+
+    .profile-avatar {
+        width: 60px;
+        height: 60px;
+        font-size: 2rem;
+    }
+
+    .profile-details li {
+        font-size: 1rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .action-buttons .button {
+        max-width: 100%;
+    }
+}
+</style>
+{% endblock %}

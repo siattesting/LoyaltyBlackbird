@@ -149,16 +149,13 @@ function loadTransactions() {
 }
 
 function loadMerchantStats() {
-    // This would typically fetch merchant-specific stats
-    // For now, we'll use the general stats endpoint
     fetch('/dashboard/stats')
         .then(response => response.json())
         .then(data => {
-            document.getElementById('total-issued').textContent = data.total_earned || 0;
+            document.getElementById('total-issued').textContent = data.total_issued || 0;
+            document.getElementById('active-vouchers').textContent = data.active_vouchers || 0;
+            document.getElementById('customers-served').textContent = data.customers_served || 0;
             document.getElementById('recent-transactions').textContent = data.recent_transactions || 0;
-            // These would be merchant-specific in a full implementation
-            document.getElementById('active-vouchers').textContent = '0';
-            document.getElementById('customers-served').textContent = '0';
         })
         .catch(error => console.error('Error loading stats:', error));
 }

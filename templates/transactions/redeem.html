@@ -20,26 +20,20 @@
 <div style="max-width: 500px; margin: 0 auto;">
     <article>
         <form method="POST">
+            {{ form.hidden_tag() }}
             <div class="form-group">
-                <label for="voucher_code">
-                    🎫 Voucher Code
-                </label>
-                <input 
-                    type="text" 
-                    id="voucher_code" 
-                    name="voucher_code" 
-                    required 
-                    placeholder="Enter your voucher code (e.g., ABC12345)"
-                    style="text-transform: uppercase; font-family: monospace; font-size: 1.2rem; text-align: center;"
-                    maxlength="20"
-                >
+                {{ form.voucher_code.label }}
+                {{ form.voucher_code(placeholder="Enter your voucher code (e.g., ABC12345)", style="text-transform: uppercase; font-family: monospace; font-size: 1.2rem; text-align: center;", maxlength=20, required=True) }}
+                {% for error in form.voucher_code.errors %}
+                    <small class="error">{{ error }}</small>
+                {% endfor %}
                 <small style="color: #666; display: block; margin-top: 0.5rem;">
                     Voucher codes are usually 6-8 characters long
                 </small>
             </div>
             
             <div class="form-actions">
-                <button type="submit" class="primary" style="width: 100%;">
+                <button type="submit" class="primary" style="width: 100%;" data-loading-text="Redeeming...">
                     ✨ Redeem Voucher
                 </button>
             </div>

@@ -26,29 +26,38 @@
 </head>
 <body>
     <header class="header">
-        <div class="container">
-            <h1>🍽️ LoyaltyApp</h1>
-            <nav>
-                <ul>
-                    <li><a href="{{ url_for('index') }}">Home</a></li>
-                    {% if current_user.is_authenticated %}
-                        <li><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
-                        {% if current_user.user_type.value == 'merchant' %}
-                            <li><a href="{{ url_for('transactions.issue_points') }}">Issue Points</a></li>
-                        {% else %}
-                            <li><a href="{{ url_for('transactions.transfer_points') }}">Transfer Points</a></li>
-                            <li><a href="{{ url_for('transactions.redeem_voucher') }}">Redeem Voucher</a></li>
-                        {% endif %}
-                        <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-                        <li><span class="user-badge {{ current_user.user_type.value }}">{{ current_user.username }}</span></li>
-                    {% else %}
-                        <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-                        <li><a href="{{ url_for('auth.register') }}">Register</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <div class="container nav-container">
+        <a href="{{ url_for('index') }}" class="nav-brand">🍽️ LoyaltyApp</a>
+        <button class="nav-toggle" aria-label="Toggle navigation">
+            <span class="hamburger"></span>
+        </button>
+        <nav class="nav-menu">
+            <ul>
+                <li><a href="{{ url_for('index') }}">Home</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('dashboard.profile') }}">Profile</a></li>
+                    <li class="dropdown">
+                        <a href="#" class="dropdown-toggle" tabindex="0">Transactions</a>
+                        <ul class="dropdown-menu">
+                            {% if current_user.user_type.value == 'merchant' %}
+                                <li><a href="{{ url_for('transactions.issue_points') }}">Issue Points</a></li>
+                            {% else %}
+                                <li><a href="{{ url_for('transactions.transfer_points') }}">Transfer Points</a></li>
+                                <li><a href="{{ url_for('transactions.redeem_voucher') }}">Redeem Voucher</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    <li><span class="user-badge {{ current_user.user_type.value }}">{{ current_user.username }}</span></li>
+                {% else %}
+                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</header>
 
     <main class="container">
         <!-- Flash messages -->
@@ -87,7 +96,7 @@
     <footer style="text-align: center; padding: 2rem; margin-top: 3rem; border-top: 1px solid #ddd;">
         <p>&copy; 2025 LoyaltyApp - Empowering African Restaurants 🌍</p>
         <p style="font-size: 0.9rem; color: #666;">
-            Built with ❤️ for the African market | 
+            Built with ❤️ for the African markets | 
             <a href="https://github.com/yourusername/loyalty-app" target="_blank" rel="noopener">GitHub</a>
         </p>
     </footer>

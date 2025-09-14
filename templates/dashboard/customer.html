@@ -8,7 +8,7 @@
         🍽️ Customer Dashboard
     </h1>
     <p style="color: var(--dark-color);">
-        Welcome back, {{ user.username }}! Keep collecting those points! 
+        Welcome back, <strong>{{ user.username }}</strong>! Keep collecting those points! 
     </p>
 </div>
 
@@ -42,20 +42,46 @@
     <h2 style="color: var(--secondary-color); margin-bottom: 1rem;">
         ⚡ Quick Actions
     </h2>
-    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;">
         <button id="qr-scan-button" role="button" class="primary">
             📱 Scan QR Code
         </button>
         <a href="{{ url_for('transactions.redeem_voucher') }}" role="button" class="secondary">
             🎫 Redeem Voucher
         </a>
-        <a href="{{ url_for('transactions.transfer_points') }}" role="button" class="outline">
-            💸 Transfer Points
-        </a>
         <button onclick="refreshDashboard()" role="button" class="outline">
             🔄 Refresh Data
         </button>
     </div>
+
+    <article style="background: var(--light-color); padding: 2rem; border-radius: 0.5rem;">
+        <h3 style="color: var(--accent-color); margin-bottom: 1rem;">
+            💸 Quick Point Transfer
+        </h3>
+        <form method="POST" action="{{ url_for('transactions.transfer_points') }}">
+            {{ form.hidden_tag() }}
+            <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end;">
+                <div>
+                    {{ form.recipient_email.label }}
+                    {{ form.recipient_email(placeholder="friend@example.com", required=True) }}
+                    {% for error in form.recipient_email.errors %}
+                        <small class="error">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                <div>
+                    {{ form.points.label }}
+                    {{ form.points(min=1, max=user.points_balance | int, placeholder="0", required=True) }}
+                    {% for error in form.points.errors %}
+                        <small class="error">{{ error }}</small>
+                    {% endfor %}
+                </div>
+                <div>
+                    <button type="submit" class="primary" data-loading-text="Sending...">Send</button>
+                </div>
+            </div>
+            {{ form.description(value="Quick transfer from dashboard", style="display:none;") }}
+        </form>
+    </article>
 </section>
 
 <!-- Transaction Filters -->

@@ -11,75 +11,51 @@
         </header>
         
         <form method="POST">
+            {{ form.hidden_tag() }}
             <div class="form-group">
-                <label for="username">
-                    👤 Username
-                </label>
-                <input 
-                    type="text" 
-                    id="username" 
-                    name="username" 
-                    required 
-                    placeholder="Choose a unique username"
-                    autocomplete="username"
-                >
+                {{ form.username.label(class="form-label") }}
+                {{ form.username(class="form-control", placeholder="Choose a unique username", autocomplete="username") }}
             </div>
             
             <div class="form-group">
-                <label for="email">
-                    📧 Email Address
-                </label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    required 
-                    placeholder="Enter your email address"
-                    autocomplete="email"
-                >
+                {{ form.email.label(class="form-label") }}
+                {{ form.email(class="form-control", placeholder="Enter your email address", autocomplete="email") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.phone.label(class="form-label") }}
+                {{ form.phone(class="form-control", placeholder="Enter your phone number", autocomplete="tel") }}
             </div>
             
             <div class="form-group">
-                <label for="password">
-                    🔒 Password
-                </label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    required 
-                    placeholder="Create a strong password"
-                    autocomplete="new-password"
-                >
+                {{ form.password.label(class="form-label") }}
+                {{ form.password(class="form-control", placeholder="Create a strong password", autocomplete="new-password") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.confirm_password.label(class="form-label") }}
+                {{ form.confirm_password(class="form-control", placeholder="Confirm your password", autocomplete="new-password") }}
             </div>
             
             <div class="form-group">
-                <label for="user_type">
-                    🎭 Account Type
-                </label>
-                <select id="user_type" name="user_type" required>
-                    <option value="">Select your account type</option>
-                    <option value="customer">🍽️ Customer - I want to earn points</option>
-                    <option value="merchant">🏪 Merchant - I own a restaurant</option>
-                </select>
+                {{ form.user_type.label(class="form-label") }}
+                {{ form.user_type(class="form-control") }}
             </div>
             
-            <div class="form-group" id="business-name-group" style="display: none;">
-                <label for="business_name">
-                    🏪 Business Name
-                </label>
-                <input 
-                    type="text" 
-                    id="business_name" 
-                    name="business_name" 
-                    placeholder="Enter your restaurant/business name"
-                >
+            <div class="merchant-fields" style="display: none;">
+                <div class="form-group">
+                    {{ form.business_name.label(class="form-label") }}
+                    {{ form.business_name(class="form-control", placeholder="Enter your restaurant/business name") }}
+                </div>
+
+                <div class="form-group">
+                    {{ form.address.label(class="form-label") }}
+                    {{ form.address(class="form-control", placeholder="Enter your business address") }}
+                </div>
             </div>
             
             <div class="form-actions">
-                <button type="submit" class="primary" style="width: 100%;">
-                    Create Account
-                </button>
+                {{ form.submit(class="primary", style="width: 100%;") }}
             </div>
         </form>
         
@@ -95,18 +71,23 @@
 </div>
 
 <script>
-document.getElementById('user_type').addEventListener('change', function() {
-    const businessNameGroup = document.getElementById('business-name-group');
+document.addEventListener('DOMContentLoaded', function() {
+    const userTypeSelect = document.getElementById('user_type');
+    const merchantFields = document.querySelector('.merchant-fields');
     const businessNameInput = document.getElementById('business_name');
-    
-    if (this.value === 'merchant') {
-        businessNameGroup.style.display = 'block';
-        businessNameInput.required = true;
-    } else {
-        businessNameGroup.style.display = 'none';
-        businessNameInput.required = false;
-        businessNameInput.value = '';
-    }
+    const addressInput = document.getElementById('address');
+
+    userTypeSelect.addEventListener('change', function() {
+        if (this.value === 'merchant') {
+            merchantFields.style.display = 'block';
+            businessNameInput.required = true;
+            addressInput.required = true;
+        } else {
+            merchantFields.style.display = 'none';
+            businessNameInput.required = false;
+            addressInput.required = false;
+        }
+    });
 });
 </script>
 {% endblock %}

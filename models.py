@@ -1,10 +1,9 @@
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Integer, Float, DateTime, Boolean, Text, Enum, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_login import UserMixin
-# from app import db
-from extensions import db, Model
+from extensions import Model
 import enum
 
 class UserType(enum.Enum):
@@ -24,11 +23,15 @@ class User(UserMixin, Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    phone: Mapped[Optional[str]] = mapped_column(String(20))
     password_hash: Mapped[str] = mapped_column(String(256), nullable=False)
     user_type: Mapped[UserType] = mapped_column(Enum(UserType), nullable=False)
     business_name: Mapped[Optional[str]] = mapped_column(String(120))
-    points_balance: Mapped[float] = mapped_column(Float, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    address: Mapped[Optional[str]] = mapped_column(String(255))
+    # latitude: Mapped[Optional[float]] = mapped_column(Float)
+    # longitude: Mapped[Optional[float]] = mapped_column(Float)
+    points_balance: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
     
     # Relationships
     sent_transactions: Mapped[List["Transaction"]] = relationship(
@@ -48,11 +51,11 @@ class Transaction(Model):
     transaction_type: Mapped[TransactionType] = mapped_column(Enum(TransactionType), nullable=False)
     sender_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'))
     receiver_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'))
-    points: Mapped[float] = mapped_column(Float, nullable=False)
+    points: Mapped[int] = mapped_column(Integer, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text)
     voucher_code: Mapped[Optional[str]] = mapped_column(String(50))
     qr_code: Mapped[Optional[str]] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
     
     # Relationships
     sender: Mapped[Optional["User"]] = relationship(
@@ -68,10 +71,10 @@ class Voucher(Model):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     merchant_id: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'), nullable=False)
-    points_value: Mapped[float] = mapped_column(Float, nullable=False)
+    points_value: Mapped[int] = mapped_column(Integer, nullable=False)
     is_redeemed: Mapped[bool] = mapped_column(Boolean, default=False)
     redeemed_by: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('users.id'))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone.utc))
     redeemed_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
     
     # Relationships
